@@ -1,2 +1,7 @@
 # 2025_SEASONTHON_TEAM_89_BE
 2025_SEASONTHON_TEAM_89_BE
+
+실행법
+```sh
+python -m app
+```

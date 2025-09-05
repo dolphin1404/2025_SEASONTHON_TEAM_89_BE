@@ -5,6 +5,9 @@ from app.schemas.family_group import (
     FamilyGroupJoinRequest,
     FamilyGroupJoinResponse,
     FamilyGroupInfoResponse,
+    FamilyGroupCompleteResponse,
+    FamilyGroupKickMemberRequest,
+    FamilyGroupKickMemberResponse,
     ErrorResponse
 )
 from app.services.family_group_service import family_group_service
@@ -88,29 +91,93 @@ async def join_family_group(request: FamilyGroupJoinRequest):
             detail="그룹 참여 실패"
         )
 
-@router.get(
-    "/info/{user_id}",
-    response_model=FamilyGroupInfoResponse,
+@router.post(
+    "/complete",
+    response_model=FamilyGroupCompleteResponse,
     status_code=status.HTTP_200_OK,
-    summary="가족 그룹 정보 조회",
-    description="사용자가 속한 가족 그룹의 구성원 정보와 경고 횟수를 조회"
+    summary="그룹 생성 완료",
+    description="대기 중인 그룹을 정식 그룹으로 완성함 (최초 생성자만 가능)"
 )
-async def get_family_group_info(user_id: str):
+async def complete_group_creation(user_id: str):
     """
-    가족 그룹 정보 조회 API
+    그룹 생성 완료 API
     
-    - user_id: 조회하는 사용자 ID
+    - user_id: 그룹 생성자의 사용자 ID
     
     Returns:
-    - 그룹 정보, 구성원 수, 각 구성원의 이름과 경고 횟수
+    - 완성된 그룹 정보
     """
-    result = family_group_service.get_family_group_info(user_id)
-    if result is None:
+    try:
+        result = await family_group_service.complete_group_creation(user_id)
+        return FamilyGroupCompleteResponse(**result)
+    except ValueError as e:
+        error_code = str(e)
+        if error_code == "NO_PENDING_GROUP":
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="대기 중인 그룹이 없습니다"
+            )
+        elif error_code == "NOT_GROUP_CREATOR":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="그룹 생성자만 완성할 수 있습니다"
+            )
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="가족 그룹에 속해있지 않음"
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="그룹 완성 중 오류가 발생했습니다"
         )
-    return result
+
+
+@router.post(
+    "/kick",
+    response_model=FamilyGroupKickMemberResponse,
+    status_code=status.HTTP_200_OK,
+    summary="대기 그룹에서 멤버 추방",
+    description="그룹장이 대기 중인 그룹에서 특정 멤버를 추방함"
+)
+async def kick_member_from_pending_group(request: FamilyGroupKickMemberRequest):
+    """
+    대기 그룹에서 멤버 추방 API
+    
+    - creator_id: 그룹장 ID (추방 권한이 있는 사용자)
+    - target_user_id: 추방할 사용자 ID
+    
+    Returns:
+    - 추방된 사용자 정보와 남은 멤버 수
+    """
+    try:
+        result = family_group_service.kick_member_from_pending_group(
+            request.creator_id, 
+            request.target_user_id
+        )
+        return FamilyGroupKickMemberResponse(**result)
+    except ValueError as e:
+        error_code = str(e)
+        if error_code == "NO_PENDING_GROUP":
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="대기 중인 그룹이 없습니다"
+            )
+        elif error_code == "NOT_GROUP_CREATOR":
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail="그룹 생성자만 멤버를 추방할 수 있습니다"
+            )
+        elif error_code == "CANNOT_KICK_YOURSELF":
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="자기 자신을 추방할 수 없습니다"
+            )
+        elif error_code == "USER_NOT_IN_GROUP":
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="해당 사용자가 그룹에 없습니다"
+            )
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail="멤버 추방 중 오류가 발생했습니다"
+        )
+
 
 @router.delete(
     "/leave/{user_id}",
@@ -151,44 +218,31 @@ async def update_warning_count(user_id: str, warning_count: int):
     family_group_service.update_user_warning_count(user_id, warning_count)
     return {"message": f"사용자 {user_id}의 경고 횟수가 {warning_count}로 업데이트됨"}
 
-@router.post(
-    "/complete",
+
+@router.get(
+    "/info/{user_id}",
+    response_model=FamilyGroupInfoResponse,
     status_code=status.HTTP_200_OK,
-    summary="그룹 생성 완료",
-    description="대기 중인 그룹을 정식 그룹으로 완성함 (최초 생성자만 가능)"
+    summary="가족 그룹 정보 조회",
+    description="사용자가 속한 가족 그룹의 구성원 정보와 경고 횟수를 조회"
 )
-async def complete_group_creation(user_id: str):
+async def get_family_group_info(user_id: str):
     """
-    그룹 생성 완료 API
+    가족 그룹 정보 조회 API
     
-    - user_id: 그룹 생성자의 사용자 ID
+    - user_id: 조회하는 사용자 ID
     
     Returns:
-    - 완성된 그룹 정보
+    - 그룹 정보, 구성원 수, 각 구성원의 이름과 경고 횟수
     """
-    try:
-        result = await family_group_service.complete_group_creation(user_id)
-        return {
-            "success": True,
-            "message": "그룹 생성이 완료되었습니다",
-            "data": result
-        }
-    except ValueError as e:
-        error_code = str(e)
-        if error_code == "NO_PENDING_GROUP":
-            raise HTTPException(
-                status_code=status.HTTP_404_NOT_FOUND,
-                detail="대기 중인 그룹이 없습니다"
-            )
-        elif error_code == "NOT_GROUP_CREATOR":
-            raise HTTPException(
-                status_code=status.HTTP_403_FORBIDDEN,
-                detail="그룹 생성자만 완성할 수 있습니다"
-            )
+    result = family_group_service.get_family_group_info(user_id)
+    if result is None:
         raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="그룹 완성 중 오류가 발생했습니다"
+            status_code=status.HTTP_404_NOT_FOUND,
+            detail="가족 그룹에 속해있지 않음"
         )
+    return result
+
 
 @router.get(
     "/pending/{user_id}",

@@ -208,7 +208,7 @@ class FamilyGroupService:
         # 대기 사용자 목록에 추가
         self.waiting_users[join_code].add(request.user_id)
         
-        # 🆕 마지막 업데이트 시간 추가 (폴링용)
+        # 마지막 업데이트 시간 추가 (폴링용)
         pending_group["last_updated"] = joined_at
         
         return FamilyGroupJoinResponse(
@@ -260,11 +260,54 @@ class FamilyGroupService:
         del self.pending_codes[user_id]
         del self.waiting_users[join_code]
         
+        # FamilyGroupCompleteResponse에 맞는 형태로 반환
+        members_list = list(group_data["members"].keys())
         return {
             "group_id": group_id,
             "group_name": group_data["group_name"],
-            "total_members": len(group_data["members"]),
-            "status": "completed"
+            "creator_name": group_data["creator_name"],
+            "members": members_list,  # 멤버 ID 목록
+            "total_members": len(members_list),  # 총 멤버 수
+            "completed_at": datetime.now()
+        }
+    
+    def kick_member_from_pending_group(self, creator_id: str, target_user_id: str) -> dict:
+        """대기 중인 그룹에서 멤버 추방 (그룹장만 가능)"""
+        # 그룹장인지 확인
+        if creator_id not in self.pending_codes:
+            raise ValueError("NO_PENDING_GROUP")
+        
+        join_code = self.pending_codes[creator_id]
+        pending_group = self.pending_groups[join_code]
+        
+        if pending_group["creator_id"] != creator_id:
+            raise ValueError("NOT_GROUP_CREATOR")
+        
+        # 자기 자신을 추방하려는 경우
+        if creator_id == target_user_id:
+            raise ValueError("CANNOT_KICK_YOURSELF")
+        
+        # 대상 사용자가 그룹에 있는지 확인
+        if target_user_id not in pending_group["members"]:
+            raise ValueError("USER_NOT_IN_GROUP")
+        
+        # 대기 그룹에서 멤버 제거
+        kicked_member = pending_group["members"][target_user_id]
+        del pending_group["members"][target_user_id]
+        
+        # 대기 사용자 목록에서도 제거
+        if join_code in self.waiting_users:
+            self.waiting_users[join_code].discard(target_user_id)
+        
+        # 마지막 업데이트 시간 갱신
+        pending_group["last_updated"] = datetime.now()
+        
+        return {
+            "success": True,
+            "kicked_user_id": target_user_id,
+            "kicked_user_name": kicked_member["user_name"],
+            "remaining_members": len(pending_group["members"]),
+            "message": f"{kicked_member['user_name']}님이 그룹에서 제거되었습니다."
         }
     
     async def _expire_group_creation(self, join_code: str):

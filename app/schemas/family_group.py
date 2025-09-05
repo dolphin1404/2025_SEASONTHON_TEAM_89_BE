@@ -45,6 +45,28 @@ class FamilyGroupInfoResponse(BaseModel):
     members: List[FamilyMember] = Field(..., description="구성원 목록")
     created_at: datetime = Field(..., description="그룹 생성 시간")
 
+# 가족 그룹 완료 응답
+class FamilyGroupCompleteResponse(BaseModel):
+    group_id: str = Field(..., description="완성된 그룹 ID")
+    group_name: str = Field(..., description="그룹 이름")
+    creator_name: str = Field(..., description="그룹장 이름")
+    members: List[str] = Field(..., description="구성원 목록")
+    total_members: int = Field(..., description="총 멤버 수")
+    completed_at: datetime = Field(..., description="완성 시간")
+
+# 멤버 추방 요청
+class FamilyGroupKickMemberRequest(BaseModel):
+    creator_id: str = Field(..., description="그룹장 ID")
+    target_user_id: str = Field(..., description="추방할 사용자 ID")
+
+# 멤버 추방 응답
+class FamilyGroupKickMemberResponse(BaseModel):
+    success: bool = Field(..., description="추방 성공 여부")
+    kicked_user_id: str = Field(..., description="추방된 사용자 ID")
+    kicked_user_name: str = Field(..., description="추방된 사용자 이름")
+    remaining_members: int = Field(..., description="남은 멤버 수")
+    message: str = Field(..., description="결과 메시지")
+
 # 에러 응답
 class ErrorResponse(BaseModel):
     error: str = Field(..., description="에러 메시지")

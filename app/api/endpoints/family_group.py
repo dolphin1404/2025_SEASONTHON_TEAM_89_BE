@@ -25,7 +25,7 @@ async def create_family_group(request: FamilyGroupCreateRequest):
     """
     가족 그룹 생성 API (대기 상태)
     
-    - group_name: 그룹 이름 (최대 8자)
+    삭제 : # - group_name: 그룹 이름 (최대 8자)
     - user_id: 그룹을 생성하는 사용자 ID
     - user_name: 그룹을 생성하는 사용자 이름
     

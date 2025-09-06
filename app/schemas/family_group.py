@@ -4,14 +4,14 @@ from datetime import datetime
 
 # 가족 그룹 생성 요청
 class FamilyGroupCreateRequest(BaseModel):
-    group_name: str = Field(..., min_length=1, max_length=8, description="그룹 이름 (최대 8자)")
+    # group_name: str = Field(..., min_length=1, max_length=8, description="그룹 이름 (최대 8자)")
     user_id: str = Field(..., description="그룹을 생성하는 사용자 ID")
     user_name: str = Field(..., description="그룹을 생성하는 사용자 이름")
 
 # 가족 그룹 생성 응답
 class FamilyGroupCreateResponse(BaseModel):
     group_id: str = Field(..., description="생성된 그룹 ID")
-    group_name: str = Field(..., description="그룹 이름")
+    # group_name: str = Field(..., description="그룹 이름")
     join_code: str = Field(..., description="10자리 참여 코드")
     creator_id: str = Field(..., description="그룹장 ID")
     created_at: datetime = Field(..., description="생성 시간")
@@ -25,7 +25,7 @@ class FamilyGroupJoinRequest(BaseModel):
 # 가족 그룹 참여 응답
 class FamilyGroupJoinResponse(BaseModel):
     group_id: str = Field(..., description="참여한 그룹 ID")
-    group_name: str = Field(..., description="그룹 이름")
+    # group_name: str = Field(..., description="그룹 이름")
     creator_name: str = Field(..., description="그룹장 이름")
     joined_at: datetime = Field(..., description="참여 시간")
 
@@ -40,7 +40,7 @@ class FamilyMember(BaseModel):
 # 가족 그룹 정보 조회 응답
 class FamilyGroupInfoResponse(BaseModel):
     group_id: str = Field(..., description="그룹 ID")
-    group_name: str = Field(..., description="그룹 이름")
+    # group_name: str = Field(..., description="그룹 이름")
     member_count: int = Field(..., description="구성원 수")
     members: List[FamilyMember] = Field(..., description="구성원 목록")
     created_at: datetime = Field(..., description="그룹 생성 시간")
@@ -48,7 +48,7 @@ class FamilyGroupInfoResponse(BaseModel):
 # 가족 그룹 완료 응답
 class FamilyGroupCompleteResponse(BaseModel):
     group_id: str = Field(..., description="완성된 그룹 ID")
-    group_name: str = Field(..., description="그룹 이름")
+    # group_name: str = Field(..., description="그룹 이름")
     creator_name: str = Field(..., description="그룹장 이름")
     members: List[str] = Field(..., description="구성원 목록")
     total_members: int = Field(..., description="총 멤버 수")

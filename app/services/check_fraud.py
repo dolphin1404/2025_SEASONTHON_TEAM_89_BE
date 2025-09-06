@@ -54,7 +54,7 @@ Output: {{"risk_level": "위험", "confidence": 0.98, "detected_patterns": ["과
 
 Example E - NORMAL MESSENGER (경고):
 Input: "무슨 부탁인데?"
-Output: {{"risk_level": "경고", "confidence": 0.85, "detected_patterns": [""], "explanation": "일상적인 대화 문의입니다.", "recommended_action": "없음"}}
+Output: {{"risk_level": "경고", "confidence": 0.75, "detected_patterns": [""], "explanation": "일상적인 대화지만 갑작스런 금전 부탁인 경우 주의가 필요합니다.", "recommended_action": "없음"}}
 
 Example F - MONEY REQUEST (경고):
 Input: "얼마나 보내면 돼?"
@@ -76,6 +76,25 @@ Example I - TRANSFER MONEY (위험):
 Input: "너만 믿고 넣는다"
 Output: {{"risk_level": "위험", "confidence": 0.85, "detected_patterns": ["과도한 신용"], "explanation": "상대방에 대한 과도한 신뢰는 사기의 위험 요소입니다.", "recommended_action": "전송 중단 권고"}}
 
+Example J - ACCOUNT ABUSE (위험):
+Input: "대포통장"
+Output: {{"risk_level": "위험", "confidence": 0.99, "detected_patterns": ["대포통장 언급"], "explanation": "대포통장은 불법 금융거래에 사용됩니다.", "recommended_action": "전송 중단 권고"}}
+
+Example K - PERSONAL INFO LEAK (위험):
+Input: "개인정보유출"
+Output: {{"risk_level": "위험", "confidence": 0.95, "detected_patterns": ["개인정보 유출"], "explanation": "개인정보 유출은 매우 심각한 보안 위험입니다.", "recommended_action": "전송 중단 권고"}}
+
+Example L - STRANGER CONTACT (경고):
+Input: "모르는 사람"
+Output: {{"risk_level": "경고", "confidence": 0.70, "detected_patterns": ["신원 미확인"], "explanation": "모르는 사람과의 거래는 주의가 필요합니다.", "recommended_action": "전송 전 확인"}}
+
+Example M - LOAN OFFER (경고):
+Input: "대출이 가능한거에요?"
+Output: {{"risk_level": "경고", "confidence": 0.80, "detected_patterns": ["대출 제안"], "explanation": "대출 제안은 사기일 가능성을 확인해야 합니다.", "recommended_action": "전송 전 확인"}}
+
+Example N - SUSPICIOUS LINK (위험):
+Input: "링크에 들어가라고요?"
+Output: {{"risk_level": "위험", "confidence": 0.90, "detected_patterns": ["의심스러운 링크"], "explanation": "모르는 링크 접속 요구는 피싱 시도일 수 있습니다.", "recommended_action": "전송 중단 권고"}}
 ===== END OF EXAMPLES =====
 
 ===== ACTUAL ANALYSIS TASK =====

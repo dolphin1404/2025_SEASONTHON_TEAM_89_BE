@@ -390,6 +390,53 @@ class FamilyGroupService:
                 }
         
         return None
+    
+    def cancel_group_creation(self, creator_id: str) -> dict:
+        """생성중 그룹 취소 (생성자만 가능) | 대기 중인 모든 멤버 추방 후 그룹 삭제"""
+        if creator_id not in self.pending_codes:
+            raise ValueError("NO_PENDING_GROUP")
+        
+        join_code = self.pending_codes[creator_id]
+        pending_group = self.pending_groups[join_code]
+        
+        if pending_group["creator_id"] != creator_id:
+            raise ValueError("NOT_GROUP_CREATOR")
+        
+        # 대기 중인 모든 멤버 추방 정보 수집
+        kicked_members = []
+        if join_code in self.waiting_users:
+            for member_id in self.waiting_users[join_code]:
+                if member_id in pending_group["members"]:
+                    member_info = pending_group["members"][member_id]
+                    kicked_members.append({
+                        "user_id": member_id,
+                        "user_name": member_info["user_name"],
+                        "joined_at": member_info["joined_at"].isoformat()
+                    })
+        
+        # 타이머 취소
+        if join_code in self.group_timers:
+            self.group_timers[join_code].cancel()
+            del self.group_timers[join_code]
+        
+        # 대기 상태 완전 정리\
+        total_kicked = len(kicked_members)
+        
+        # 모든 관련 데이터 삭제
+        del self.pending_groups[join_code]
+        del self.pending_codes[creator_id]
+        if join_code in self.waiting_users:
+            del self.waiting_users[join_code]
+        
+        return {
+            "success": True,
+            "message": f"그룹 생성이 취소되었습니다.",
+            "join_code": join_code,
+            "kicked_members": kicked_members,
+            "total_kicked_members": total_kicked,
+            "cancelled_at": datetime.now().isoformat(),
+            "cancelled_by": creator_id
+        }
 
 # 싱글톤 서비스 인스턴스
 family_group_service = FamilyGroupService()

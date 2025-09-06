@@ -9,25 +9,26 @@ from app.schemas.check_fraud import LLMResponse
 
 from app import OLLAMA_URL, OLLAMA_MODEL
 
-find_res = re.compile(r'({\n?\s*"risk_level":\s?"(정상|주의|위험)",\n?\s*"confidence":\s?((\d|\.)+),\n?\s+"detected_patterns":\s?(\[.*\]),\n?\s*"explanation":\s?"(.*)",\n?\s*"recommended_action":\s?"(.*)"\n?})')
+find_res = re.compile(r'({\n?\s*"risk_level":\s?"(정상|경고|위험)",\n?\s*"confidence":\s?((\d|\.)+),\n?\s+"detected_patterns":\s?(\[.*\]),\n?\s*"explanation":\s?"(.*)",\n?\s*"recommended_action":\s?"(.*)"\n?})')
 
 async def request_ollama(original_text: str):
     async with httpx.AsyncClient() as client:
-        prompt = f"""You are "위허메," an AI expert specializing in detecting financial fraud, investment scams, and phishing within Korean messaging conversations. Your purpose is to analyze conversational context and identify genuine patterns of manipulation and deception. Be accurate and balanced - do not over-classify normal conversations as suspicious.
+        prompt = f"""You are "위허메," an AI expert specializing in detecting financial fraud, investment scams, and phishing within Korean messaging conversations. Your purpose is to analyze conversational context and identify genuine patterns of manipulation and deception. Be accurate and balanced - do not over-classify normal conversations as suspicious. AND PLEASE think step by step before concluding your analysis.  
 
+            
 CRITICAL: Analyze ONLY the message provided in the ANALYSIS SECTION below. Do NOT confuse it with the examples.
 
 Your output MUST be a single, valid JSON object and nothing else. Do not include any explanatory text, code blocks, or markdown formatting before or after the JSON.
 
 IMPORTANT GUIDELINES:
 Normal daily conversations (games, casual chat, greetings, food questions) should be marked as "정상" with high confidence
-Only mark as "주의" or "위험" when there are clear fraud indicators
+Only mark as "경고" or "위험" when there are clear fraud indicators
 Consider context and common sense - not every mention of money or urgency is a scam
 Be precise with confidence scores based on actual evidence
 
 The JSON object must conform to the following schema:
 {{
-  "risk_level": "string", // Must be one of: "정상", "주의", "위험"
+  "risk_level": "string", // Must be one of: "정상", "경고", "위험"
   "confidence": "float", // A value between 0.0 and 1.0 indicating the confidence of the risk_level assessment.
   "detected_patterns": "array[string]", // A list of detected scam patterns. Examples: "과도한 수익 보장", "긴급한 입금 요구", "개인정보 요구", "비공개 정보 언급", "의심스러운 링크"
   "explanation": "string", // A brief, clear explanation in Korean for the user (max 50 characters).
@@ -35,9 +36,9 @@ The JSON object must conform to the following schema:
 }}
 ===== TRAINING EXAMPLES (DO NOT ANALYZE THESE) =====
 
-Example A - ACTUAL SCAM (주의):
+Example A - ACTUAL SCAM (경고):
 Input: "혹시 말씀해주신 계좌로 새 상품 재주문하고 기존 제품에 대한 비용을 환불해주신다는 거죠?"
-Output: {{"risk_level": "주의", "confidence": 0.75, "detected_patterns": ["환불 요구"], "explanation": "환불을 요구할 경우 사기일 가능성이 있어 주의해야 합니다.", "recommended_action": "전송 중단 권고"}}
+Output: {{"risk_level": "경고", "confidence": 0.75, "detected_patterns": ["환불 요구"], "explanation": "환불을 요구할 경우 사기일 가능성이 있어 주의해야 합니다.", "recommended_action": "전송 중단 권고"}}
 
 Example B - NORMAL FOOD QUESTION (정상):
 Input: "내일 학식 뭐야?"
@@ -50,6 +51,30 @@ Output: {{"risk_level": "정상", "confidence": 0.99, "detected_patterns": [], "
 Example D - INVESTMENT SCAM (위험):
 Input: "수익률이 200% 라구요?"
 Output: {{"risk_level": "위험", "confidence": 0.98, "detected_patterns": ["과도한 수익 보장"], "explanation": "비현실적인 수익률을 제안하는 사기 수법에 노출된 상태일 가능성이 높습니다.", "recommended_action": "전송 중단 권고"}}
+
+Example E - NORMAL MESSENGER (경고):
+Input: "무슨 부탁인데?"
+Output: {{"risk_level": "경고", "confidence": 0.85, "detected_patterns": [""], "explanation": "일상적인 대화 문의입니다.", "recommended_action": "없음"}}
+
+Example F - MONEY REQUEST (경고):
+Input: "얼마나 보내면 돼?"
+Output: {{"risk_level": "경고", "confidence": 0.75, "detected_patterns": ["직접적인 금전 요구"], "explanation": "직접적인 금전 요구는 사기일 가능성이 높으나 일상 대화일수도 있음.", "recommended_action": "전송 중단 권고"}}
+
+Example G - PERSONAL INFO (위험):
+Input: "카드 정보/인증서만 입력하면 되죠?"
+Output: {{"risk_level": "위험", "confidence": 0.90, "detected_patterns": ["개인 금융 정보 요구"], "explanation": "금융 정보 입력 요구는 매우 위험합니다.", "recommended_action": "전송 중단 권고"}}
+
+Example H - PSYCHOLOGICAL PRESSURE (경고):
+Input: "이거 진짜 맞는 거지?"
+Output: {{"risk_level": "경고", "confidence": 0.83, "detected_patterns": ["심리적 압박"], "explanation": "의심이 든다면 즉시 대화를 중단하세요.", "recommended_action": "전송 중단 권고"}}
+
+Example I - TRANSFER URGENCY (경고):
+Input: "지금 바로 이체하라고?"
+Output: {{"risk_level": "위험", "confidence": 0.92, "detected_patterns": ["송금 재촉"], "explanation": "급한 송금 요구는 사기의 전형적인 수법입니다.", "recommended_action": "전송 중단 권고"}}
+
+Example I - TRANSFER MONEY (위험):
+Input: "너만 믿고 넣는다"
+Output: {{"risk_level": "위험", "confidence": 0.85, "detected_patterns": ["과도한 신용"], "explanation": "상대방에 대한 과도한 신뢰는 사기의 위험 요소입니다.", "recommended_action": "전송 중단 권고"}}
 
 ===== END OF EXAMPLES =====
 
@@ -69,7 +94,7 @@ Analyze the above message and provide accurate JSON output based on its actual c
         }
 
         response = await client.post(f"{OLLAMA_URL}/api/generate", json=data, timeout=None)
-        return response.json()['response']
+        return response.json()['response'].replace('\"', '"')
 
 async def process_queue(cfq: CheckFraudQueue, cfrd: CheckFraudResultDict):
     while True:
@@ -97,6 +122,9 @@ async def process_queue(cfq: CheckFraudQueue, cfrd: CheckFraudResultDict):
                 cfrd.insert(original_text, result_LLMResponse)
             except Exception as e:
                 print(f"[ERROR] 큐 처리 중 오류 발생: {e}")
+                # 자세한 오류 출력
+                # import traceback
+                # traceback.print_exc()
                 # handle error (e.g., log or requeue)
                 pass
         else:

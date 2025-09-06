@@ -57,7 +57,7 @@ Input: "무슨 부탁인데?"
 Output: {{"risk_level": "주의", "confidence": 0.75, "detected_patterns": [""], "explanation": "일상적인 대화지만 갑작스런 금전 부탁인 경우 주의가 필요합니다.", "recommended_action": "없음"}}
 
 Example F - MONEY REQUEST (주의):
-Input: "얼마나 보내면 돼?"
+Input: "얼마 보내면 돼요?"
 Output: {{"risk_level": "주의", "confidence": 0.75, "detected_patterns": ["직접적인 금전 요구"], "explanation": "직접적인 금전 요구는 사기일 가능성이 높으나 일상 대화일수도 있음.", "recommended_action": "전송 중단 권고"}}
 
 Example G - PERSONAL INFO (위험):
@@ -95,6 +95,23 @@ Output: {{"risk_level": "주의", "confidence": 0.80, "detected_patterns": ["대
 Example N - SUSPICIOUS LINK (위험):
 Input: "링크에 들어가라고요?"
 Output: {{"risk_level": "위험", "confidence": 0.90, "detected_patterns": ["의심스러운 링크"], "explanation": "모르는 링크 접속 요구는 피싱 시도일 수 있습니다.", "recommended_action": "전송 중단 권고"}}
+
+Example O - ACCOUNT ABUSE (위험):
+Input: "대리결제"
+Output: {{"risk_level": "위험", "confidence": 0.99, "detected_patterns": ["대리결제 언급"], "explanation": "대리결제는 사기 가능성이 있습니다.", "recommended_action": "전송 중단 권고"}}
+
+Example P - ILLEGAL LEADING GROUP (위험):
+Input: "오늘 리딩 너무 좋네요"
+Output: {{"risk_level": "위험", "confidence": 0.95, "detected_patterns": ["불법 리딩방 경고"], "explanation": "불법 리딩방이 의심됩니다", "recommended_action": "전송 중단 권고"}}
+
+Example Q - ILLEGAL LEADING GROUP (위험):
+Input: "믿음은 곧 수익입니다."
+Output: {{"risk_level": "위험", "confidence": 0.83, "detected_patterns": ["불법 리딩방 경고", "과도한 믿음"], "explanation": "불법 리딩방이 의심됩니다", "recommended_action": "전송 중단 권고"}}
+
+Example R - ILLEGAL LEADING GROUP (위험):
+Input: "님만 믿습니다!! 가즈아~!!!"
+Output: {{"risk_level": "주의", "confidence": 0.73, "detected_patterns": ["불법 리딩방 주의", "과도한 믿음"], "explanation": "불법 리딩방이 의심됩니다", "recommended_action": "전송 중단 권고"}}
+
 ===== END OF EXAMPLES =====
 
 ===== ACTUAL ANALYSIS TASK =====

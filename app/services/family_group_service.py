@@ -197,6 +197,12 @@ class FamilyGroupService:
         pending_group = self.pending_groups[join_code]
         joined_at = datetime.now()
         
+        if pending_group["status"] != "pending":
+            raise ValueError("GROUP_ALREADY_COMPLETED_OR_EXPIRED")
+        
+        if request.user_id in pending_group["members"]:
+            raise ValueError("USER_ALREADY_IN_PENDING_GROUP")
+
         # 대기 중인 그룹에 멤버 추가
         pending_group["members"][request.user_id] = {
             "user_id": request.user_id,
@@ -229,6 +235,9 @@ class FamilyGroupService:
         if pending_group["creator_id"] != user_id:
             raise ValueError("NOT_GROUP_CREATOR")
         
+        if pending_group["status"] != "pending":
+            raise ValueError("GROUP_ALREADY_COMPLETED_OR_EXPIRED")
+        
         # 실제 그룹 생성
         group_id = self._generate_group_id()
         group_data = {
@@ -237,7 +246,8 @@ class FamilyGroupService:
             "creator_id": pending_group["creator_id"],
             "creator_name": pending_group["creator_name"],
             "members": pending_group["members"],
-            "created_at": pending_group["created_at"]
+            "created_at": pending_group["created_at"],
+            "status": "completed"
         }
         
         # 정식 그룹으로 이동

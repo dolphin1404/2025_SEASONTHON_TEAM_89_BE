@@ -100,7 +100,7 @@ async def process_queue(cfq: CheckFraudQueue, cfrd: CheckFraudResultDict):
                 # handle error (e.g., log or requeue)
                 pass
         else:
-            await asyncio.sleep(1)  # wait before checking again
+            await asyncio.sleep(0.1)  # wait before checking again
 
 async def start_processing():
     """백그라운드 큐 처리 태스크 시작"""

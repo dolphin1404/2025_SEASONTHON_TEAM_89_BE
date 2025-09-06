@@ -35,9 +35,9 @@ The JSON object must conform to the following schema:
 }}
 ===== TRAINING EXAMPLES (DO NOT ANALYZE THESE) =====
 
-Example A - ACTUAL SCAM (위험):
-Input: "급하게 돈 보낼 데가 있는데 150만원만 OOO(01-234-567) 계좌로 보내줘"
-Output: {{"risk_level": "위험", "confidence": 0.95, "detected_patterns": ["긴급한 입금 요구"], "explanation": "계좌이체 요구는 사기일 가능성이 높습니다.", "recommended_action": "전송 중단 권고"}}
+Example A - ACTUAL SCAM (주의):
+Input: "혹시 말씀해주신 계좌로 새 상품 재주문하고 기존 제품에 대한 비용을 환불해주신다는 거죠?"
+Output: {{"risk_level": "주의", "confidence": 0.75, "detected_patterns": ["환불 요구"], "explanation": "환불을 요구할 경우 사기일 가능성이 있어 주의해야 합니다.", "recommended_action": "전송 중단 권고"}}
 
 Example B - NORMAL FOOD QUESTION (정상):
 Input: "내일 학식 뭐야?"
@@ -48,8 +48,8 @@ Input: "롤이나 하자"
 Output: {{"risk_level": "정상", "confidence": 0.99, "detected_patterns": [], "explanation": "게임 제안으로 정상적인 대화입니다.", "recommended_action": "없음"}}
 
 Example D - INVESTMENT SCAM (위험):
-Input: "원금 보장에 수익률 300% 보장합니다"
-Output: {{"risk_level": "위험", "confidence": 0.98, "detected_patterns": ["과도한 수익 보장"], "explanation": "비현실적인 수익률 제안은 사기일 가능성이 높습니다.", "recommended_action": "전송 중단 권고"}}
+Input: "수익률이 200% 라구요?"
+Output: {{"risk_level": "위험", "confidence": 0.98, "detected_patterns": ["과도한 수익 보장"], "explanation": "비현실적인 수익률을 제안하는 사기 수법에 노출된 상태일 가능성이 높습니다.", "recommended_action": "전송 중단 권고"}}
 
 ===== END OF EXAMPLES =====
 

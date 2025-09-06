@@ -68,7 +68,7 @@ Analyze the above message and provide accurate JSON output based on its actual c
             "stream": False
         }
 
-        response = await client.post(f"{OLLAMA_URL}/api/generate", json=data)
+        response = await client.post(f"{OLLAMA_URL}/api/generate", json=data, timeout=None)
         return response.json()['response']
 
 async def process_queue(cfq: CheckFraudQueue, cfrd: CheckFraudResultDict):
@@ -86,8 +86,8 @@ async def process_queue(cfq: CheckFraudQueue, cfrd: CheckFraudResultDict):
                     if res:
                         status = "success"
                         break
-                    await asyncio.sleep(1)
-                
+                    await asyncio.sleep(0.1)
+
                 if status == "success":
                     result_dict = json.loads(res[0][0])
                     result_LLMResponse = LLMResponse(**result_dict)

@@ -11,9 +11,21 @@
 ## 시스템 아키텍쳐
 <img width="1122" height="313" alt="Slice 2" src="https://github.com/user-attachments/assets/677c64c8-bae1-4200-ad51-6cd78d5216a5" />
 
+## config 가이드
+
+config.py 파일을 생성 후 sample_config.py 파일을 참고하여 아래 코드와 같이 작성합니다.
+
+```py
+from app.sample_config import Config
+
+class Development(Config):
+    WEB_HOST = '0.0.0.0'
+    WEB_PORT = 서버 포트 번호
+```
 
 ## 실행법
 
 ```sh
 python -m app
 ```
+
